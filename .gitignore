@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+
+node_modules/
+npm-debug.log
+yarn-error.log
+
+*.log
+.cache/
+
+
+/Equipment*.html
+/Equipment*_files/
+/Набор*.html
+/Набор*_files/
+/rag
+
+/*.png
+/*.webp
+!/icons/**

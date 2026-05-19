@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lords Mobile</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="app-header">
+      <h1 data-i18n="app.title">Калькулятор снаряжения Lords Mobile</h1>
+      <div class="lang-switch" id="lang-switch" role="group" aria-label="Language">
+        <button type="button" class="lang-btn" data-lang="ru">RU</button>
+        <button type="button" class="lang-btn" data-lang="en">EN</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <section class="equipment-panel">
+        <div class="boards-area">
+        <div class="board-card">
+        <div class="board-label" id="main-board-label" data-i18n="totals.current">Текущий</div>
+        <div class="equipment-board" id="main-board">
+          <!-- Ряд 1 (узкий) -->
+          <div class="slot-wrap row-narrow col-left">
+            <button type="button" class="slot" data-slot="main-hand" data-icon="icons/Main-hand.webp" data-i18n-title="slot.main-hand">
+              <img class="slot-img" src="icons/Main-hand.webp" alt=""><span class="slot-add">+</span>
+            </button>
+            <div class="jewel-slots" data-slot="main-hand"></div>
+          </div>
+          <div class="slot-wrap row-narrow col-right">
+            <button type="button" class="slot" data-slot="off-hand" data-icon="icons/Off-hand.webp" data-i18n-title="slot.off-hand">
+              <img class="slot-img" src="icons/Off-hand.webp" alt=""><span class="slot-add">+</span>
+            </button>
+            <div class="jewel-slots" data-slot="off-hand"></div>
+          </div>
+
+          <!-- Ряд 2 (широкий) -->
+          <div class="slot-wrap row-wide col-left">
+            <button type="button" class="slot" data-slot="helmet" data-icon="icons/Helmet.webp" data-i18n-title="slot.helmet">
+              <img class="slot-img" src="icons/Helmet.webp" alt=""><span class="slot-add">+</span>
+            </button>
+            <div class="jewel-slots" data-slot="helmet"></div>
+          </div>
+          <div class="slot-wrap row-wide col-right">
+            <button type="button" class="slot" data-slot="accessory-1" data-icon="icons/Accessory.webp" data-i18n-title="slot.accessory-1">
+              <img class="slot-img" src="icons/Accessory.webp" alt=""><span class="slot-add">+</span>
+            </button>
+            <div class="jewel-slots" data-slot="accessory-1"></div>
+          </div>
+
+          <!-- Ряд 3 (широкий) -->
+          <div class="slot-wrap row-wide col-left">
+            <button type="button" class="slot" data-slot="armor" data-icon="icons/Armor.webp" data-i18n-title="slot.armor">
+              <img class="slot-img" src="icons/Armor.webp" alt=""><span class="slot-add">+</span>
+            </button>
+            <div class="jewel-slots" data-slot="armor"></div>
+          </div>
+          <div class="slot-wrap row-wide col-right">
+            <button type="button" class="slot" data-slot="accessory-2" data-icon="icons/Accessory.webp" data-i18n-title="slot.accessory-2">
+              <img class="slot-img" src="icons/Accessory.webp" alt=""><span class="slot-add">+</span>
+            </button>
+            <div class="jewel-slots" data-slot="accessory-2"></div>
+          </div>
+
+          <!-- Ряд 4 (узкий) -->
+          <div class="slot-wrap row-narrow col-left">
+            <button type="button" class="slot" data-slot="legs" data-icon="icons/Legs.webp" data-i18n-title="slot.legs">
+              <img class="slot-img" src="icons/Legs.webp" alt=""><span class="slot-add">+</span>
+            </button>
+            <div class="jewel-slots" data-slot="legs"></div>
+          </div>
+          <div class="slot-wrap row-narrow col-right">
+            <button type="button" class="slot" data-slot="accessory-3" data-icon="icons/Accessory.webp" data-i18n-title="slot.accessory-3">
+              <img class="slot-img" src="icons/Accessory.webp" alt=""><span class="slot-add">+</span>
+            </button>
+            <div class="jewel-slots" data-slot="accessory-3"></div>
+          </div>
+        </div>
+
+        </div><!-- /.board-card -->
+        <div class="board-card compare-card" id="compare-card" hidden>
+          <div class="board-label"><span id="compare-board-name">—</span></div>
+          <div class="equipment-board readonly" id="compare-board"></div>
+        </div>
+        </div><!-- /.boards-area -->
+
+        <div class="equipment-actions">
+          <button type="button" id="clear-btn" class="btn btn-clear" data-i18n="btn.clear">Очистить</button>
+          <button type="button" id="save-btn" class="btn btn-save" data-i18n="presets.save">Сохранить</button>
+          <button type="button" id="export-btn" class="btn btn-export" data-i18n="btn.export">Экспорт</button>
+          <button type="button" id="import-btn" class="btn btn-export" data-i18n="btn.import">Импорт</button>
+          <div class="presets-popover-wrap">
+            <button type="button" id="presets-btn" class="btn btn-presets" aria-haspopup="true" aria-expanded="false">
+              <span data-i18n="presets.title">Сеты</span><span class="caret">▾</span>
+            </button>
+            <div id="presets-popover" class="presets-popover" hidden></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="total-panel">
+        <div class="totals-header">
+          <h2 class="panel-title" data-i18n="totals.title">Итоги</h2>
+          <button type="button" id="junk-toggle" class="btn-junk" aria-pressed="false">
+            <span data-i18n="btn.hideJunk">Скрыть мусор</span>
+          </button>
+        </div>
+        <div id="compare-bar" class="compare-bar" hidden>
+          <span class="compare-label" data-i18n="presets.comparingWith">Сравнение с</span>
+          <span class="compare-name" id="compare-name">—</span>
+          <button type="button" id="stop-compare-btn" class="compare-stop" data-i18n-title="presets.stopCompare" aria-label="Stop">&times;</button>
+        </div>
+        <div id="total-stats"></div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Модалка выбора предмета -->
+  <div class="modal" id="item-modal" hidden aria-modal="true" role="dialog">
+    <div class="modal-overlay" data-close></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Выбор предмета</h2>
+        <button type="button" class="modal-close" data-close data-i18n-title="modal.close" aria-label="Закрыть">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-items-col">
+          <div class="modal-search">
+            <input type="search" id="item-search" class="modal-search-input" data-i18n-placeholder="search.placeholder" placeholder="Поиск по названию...">
+            <select id="item-sort" class="modal-sort-select"></select>
+          </div>
+          <div class="modal-items" id="modal-items"></div>
+        </div>
+        <aside class="modal-sidebar">
+          <div class="sidebar-section sidebar-rank">
+            <div class="sidebar-title" data-i18n="sidebar.rank">Ранг</div>
+            <div class="grade-chips" id="grade-chips" role="radiogroup"></div>
+          </div>
+          <div class="sidebar-section sidebar-temper" id="sidebar-temper" hidden>
+            <div class="sidebar-title"><span data-i18n="sidebar.astralite">Астралит</span>: <span id="temper-display">T0</span></div>
+            <input type="range" id="temper-tier" class="temper-range" min="0" max="15" value="0" step="1">
+            <div class="temper-scale"><span>T0</span><span>T15</span></div>
+          </div>
+          <div class="sidebar-section sidebar-sets">
+            <div class="sidebar-title" data-i18n="sidebar.sets">Набор</div>
+            <div class="set-chips" id="set-chips"></div>
+          </div>
+          <button type="button" id="confirm-btn" class="btn btn-confirm" data-i18n="btn.confirm" disabled>Добавить</button>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модалка выбора украшения -->
+  <div class="modal" id="jewel-modal" hidden aria-modal="true" role="dialog">
+    <div class="modal-overlay" data-close></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="jewel-modal-title" data-i18n="jewels.select">Выбор украшения</h2>
+        <button type="button" class="modal-close" data-close data-i18n-title="modal.close" aria-label="Закрыть">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-items" id="jewel-modal-items"></div>
+        <aside class="modal-sidebar">
+          <div class="sidebar-section">
+            <div class="sidebar-title" data-i18n="jewels.grade">Грейд</div>
+            <div class="grade-chips" id="jewel-grade-chips" role="radiogroup"></div>
+          </div>
+          <div class="sidebar-section sidebar-sets">
+            <div class="sidebar-title" data-i18n="jewels.category">Категория</div>
+            <div class="set-chips" id="jewel-category-chips"></div>
+          </div>
+          <button type="button" id="jewel-confirm-btn" class="btn btn-confirm" data-i18n="btn.confirm" disabled>Добавить</button>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модалка экспорта -->
+  <div class="modal" id="export-modal" hidden aria-modal="true" role="dialog">
+    <div class="modal-overlay" data-close></div>
+    <div class="modal-content export-modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="export.title">Экспорт сета</h2>
+        <button type="button" class="modal-close" data-close data-i18n-title="modal.close" aria-label="Закрыть">&times;</button>
+      </div>
+      <div class="export-toolbar">
+        <button type="button" id="export-copy-btn" class="btn btn-save" data-i18n="btn.copy">Скопировать</button>
+      </div>
+      <pre id="export-output" class="export-output"></pre>
+    </div>
+  </div>
+
+  <!-- Модалка импорта -->
+  <div class="modal" id="import-modal" hidden aria-modal="true" role="dialog">
+    <div class="modal-overlay" data-close></div>
+    <div class="modal-content export-modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="import.title">Импорт сета</h2>
+        <button type="button" class="modal-close" data-close data-i18n-title="modal.close" aria-label="Закрыть">&times;</button>
+      </div>
+      <textarea id="import-input" class="import-input" data-i18n-placeholder="import.placeholder" placeholder="Вставь сюда JSON, экспортированный из калькулятора"></textarea>
+      <div id="import-message" class="import-message" hidden></div>
+      <div class="export-toolbar">
+        <button type="button" id="import-apply-btn" class="btn btn-save" data-i18n="import.apply">Загрузить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Глобальная подсказка (попап) -->
+  <div id="help-tooltip" class="help-tooltip" hidden role="tooltip"></div>
+
+  <script src="i18n.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

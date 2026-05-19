@@ -1,0 +1,1549 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background:
+    linear-gradient(135deg, rgba(10, 14, 26, 0.72) 0%, rgba(16, 23, 45, 0.72) 100%),
+    url('icons/background.png') center/cover no-repeat fixed,
+    linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #e0e0e0;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+h1 {
+  flex: 1;
+  text-align: center;
+  color: #ffd700;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  font-size: 2rem;
+  margin: 0;
+}
+
+.lang-switch {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.lang-btn {
+  background: transparent;
+  border: none;
+  color: #aaa;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.lang-btn:hover {
+  background: rgba(255, 215, 0, 0.08);
+  color: #fff;
+}
+
+.lang-btn.active {
+  background: rgba(255, 215, 0, 0.2);
+  color: #ffd700;
+}
+
+.panel-title {
+  color: #ffd700;
+  margin-bottom: 18px;
+  font-size: 1.4rem;
+  text-align: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.25);
+}
+
+.totals-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.25);
+}
+
+.totals-header .panel-title {
+  margin: 0;
+  padding: 0;
+  border: none;
+  text-align: left;
+}
+
+.btn-junk {
+  background: transparent;
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  color: #ccc;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn-junk:hover {
+  background: rgba(255, 215, 0, 0.1);
+  color: #fff;
+  border-color: rgba(255, 215, 0, 0.6);
+}
+
+.btn-junk[aria-pressed="true"] {
+  background: rgba(255, 215, 0, 0.2);
+  color: #ffd700;
+  border-color: rgba(255, 215, 0, 0.7);
+}
+
+/* Главный двухколоночный макет */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 450px;
+  gap: 24px;
+  align-items: start;
+}
+
+.equipment-panel {
+  background: rgba(15, 20, 38, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: 16px;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Зона досок: основной + опционально сравниваемый */
+.boards-area {
+  display: flex;
+  gap: 28px;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.board-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.board-card[hidden] { display: none !important; }
+
+.board-label {
+  color: #ffd700;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.compare-card .board-label {
+  color: #cbb6f0;
+}
+
+.compare-card { position: relative; }
+
+.compare-card::before {
+  content: '';
+  position: absolute;
+  top: 6px; bottom: 6px; left: -16px;
+  width: 1px;
+  background: rgba(255, 215, 0, 0.2);
+}
+
+/* Compare board теперь редактируемый — readonly класс оставлен для возможной кастомизации */
+.equipment-board.readonly .slot-add { display: none; }
+
+/* Ромбовидная раскладка */
+.equipment-board {
+  display: grid;
+  grid-template-columns: repeat(4, 115px);
+  gap: 7px 22px;
+  justify-content: center;
+}
+
+.slot-wrap {
+  position: relative;
+  width: 96px;
+  height: 96px;
+}
+.slot-wrap.row-narrow.col-left  { grid-column: 2; }
+.slot-wrap.row-narrow.col-right { grid-column: 3; }
+.slot-wrap.row-wide.col-left    { grid-column: 1; transform: translateX(81px); }
+.slot-wrap.row-wide.col-right   { grid-column: 4; transform: translateX(-81px); }
+
+/* 3 jewel-слота горизонтальным рядом внизу слота, прижато к левому краю — как в игре */
+.jewel-slots {
+  position: absolute;
+  bottom: 3px;
+  left: 2px;
+  display: flex;
+  gap: 0;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.jewel-slot {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: linear-gradient(160deg, rgba(42, 47, 64, 0.85), rgba(20, 24, 31, 0.85));
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.2s;
+}
+
+.jewel-slot:hover {
+  transform: scale(1.1);
+  border-color: #ffd700;
+  box-shadow: 0 0 6px rgba(255, 215, 0, 0.4);
+}
+
+.jewel-slot[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.jewel-slot[disabled]:hover {
+  transform: none;
+  border-color: #555;
+  box-shadow: none;
+}
+
+/* 4-й слот — заглушка, не интерактивна */
+.jewel-slot-placeholder {
+  opacity: 0.55;
+  background: linear-gradient(160deg, rgba(20, 20, 28, 0.9), rgba(8, 10, 14, 0.95));
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.jewel-slot-img {
+  width: 86%;
+  height: 86%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Фон jewel-слота по грейду — текстуры из игры */
+.jewel-slot[data-grade] {
+  background-size: cover;
+  background-position: center;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+.jewel-slot[data-grade="Common"]    { background-image: url('icons/Common_Equipment.webp'); }
+.jewel-slot[data-grade="Uncommon"]  { background-image: url('icons/Uncommon_Equipment.webp'); }
+.jewel-slot[data-grade="Rare"]      { background-image: url('icons/Rare_Equipment.webp'); }
+.jewel-slot[data-grade="Epic"]      { background-image: url('icons/Epic_Equipment.webp'); }
+.jewel-slot[data-grade="Legendary"] { background-image: url('icons/Legendary_Equipment.webp'); box-shadow: 0 0 8px rgba(245, 208, 40, 0.5); }
+
+/* Слот = только иконка */
+.slot {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 12px;
+  background: linear-gradient(160deg, #3a3f55 0%, #1c2030 100%);
+  border: 3px solid #6b5b2e;
+  box-shadow: inset 0 0 0 1px rgba(255, 215, 0, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.slot:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4), 0 0 12px rgba(255, 215, 0, 0.35);
+}
+
+.slot:focus-visible {
+  outline: 2px solid #ffd700;
+  outline-offset: 2px;
+}
+
+.slot-img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  filter: grayscale(0.6) brightness(0.85);
+  transition: filter 0.2s;
+  pointer-events: none;
+}
+
+/* Когда предмет выбран — иконка занимает почти весь слот, как в игре */
+.slot.filled .slot-img {
+  filter: none;
+  width: 79%;
+  height: 79%;
+  transform: translateY(-8px);
+}
+
+.slot-add {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #2ecc71;
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px #1a1a2e;
+  line-height: 1;
+}
+
+/* Скрываем зелёный «+» когда в слоте уже выбран предмет */
+.slot.filled .slot-add {
+  display: none;
+}
+
+/* Фон по грейду — реальные текстуры из игры; обводка убрана */
+.slot.filled {
+  --grade-color: #c8d0d8;
+  --grade-bg: url('icons/Common_Equipment.webp');
+  background-image: var(--grade-bg);
+  background-size: cover;
+  background-position: center;
+  border-color: transparent;
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.slot.filled[data-rarity="Common"]    { --grade-color: #c8d0d8; --grade-bg: url('icons/Common_Equipment.webp'); }
+.slot.filled[data-rarity="Uncommon"]  { --grade-color: #3fbf3f; --grade-bg: url('icons/Uncommon_Equipment.webp'); }
+.slot.filled[data-rarity="Rare"]      { --grade-color: #3a7ed0; --grade-bg: url('icons/Rare_Equipment.webp'); }
+.slot.filled[data-rarity="Epic"]      { --grade-color: #b042c8; --grade-bg: url('icons/Epic_Equipment.webp'); }
+.slot.filled[data-rarity="Legendary"] { --grade-color: #f5d028; --grade-bg: url('icons/Legendary_Equipment.webp'); }
+.slot.filled[data-rarity="Mythic"]    { --grade-color: #e87838; --grade-bg: url('icons/Mythic_Equipment.webp'); }
+
+/* Mythic с астралитом — иконка астралита по левому краю слота, чуть выше середины */
+.slot.filled.tempered::before,
+.slot.filled.tempered::after {
+  position: absolute;
+  top: 40px;
+  left: 2px;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.slot.filled.tempered::before {
+  content: '';
+  background: url('icons/astralite.webp') center/contain no-repeat;
+  filter: var(--temper-filter, none) drop-shadow(0 0 3px var(--temper-glow, rgba(95, 184, 232, 0.7)));
+}
+
+.slot.filled.tempered::after {
+  content: attr(data-temper-tier);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  -webkit-text-stroke: 2px #000;
+  paint-order: stroke fill;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  z-index: 4;
+}
+
+/* Цвет астралита: T1–T14 — родной синий, T15 — фиолетовый через hue-rotate */
+.slot.filled.tempered[data-temper-band="high"] {
+  --temper-filter: hue-rotate(75deg) saturate(1.2);
+  --temper-glow: rgba(184, 95, 232, 0.85);
+}
+
+/* Кнопки */
+.equipment-actions {
+  margin-top: 28px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.btn {
+  padding: 10px 32px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-clear {
+  background: linear-gradient(180deg, #4a7ab8, #2b5891);
+  color: #fff;
+}
+
+.btn-save {
+  background: linear-gradient(180deg, #5fa459, #3d7a37);
+  color: #fff;
+}
+
+.btn-export {
+  background: linear-gradient(180deg, #6d9bbd, #3f6587);
+  color: #fff;
+}
+
+.export-modal-content {
+  width: min(800px, 100%);
+}
+
+.export-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.export-output {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 8px;
+  padding: 14px 16px;
+  color: #e0e0e0;
+  font-family: 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  white-space: pre;
+  user-select: text;
+}
+
+.export-output::-webkit-scrollbar { width: 6px; height: 6px; }
+.export-output::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.25);
+  border-radius: 3px;
+}
+
+.import-input {
+  flex: 1;
+  min-height: 300px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  color: #e0e0e0;
+  font-family: 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.import-input:focus {
+  border-color: rgba(255, 215, 0, 0.6);
+}
+
+.import-message[hidden] { display: none !important; }
+.import-message {
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.import-message.success {
+  background: rgba(95, 164, 89, 0.15);
+  border: 1px solid rgba(95, 164, 89, 0.5);
+  color: #b7e0b3;
+}
+
+.import-message.error {
+  background: rgba(231, 76, 60, 0.15);
+  border: 1px solid rgba(231, 76, 60, 0.5);
+  color: #f1b0a7;
+}
+
+.import-message.warn {
+  background: rgba(245, 208, 40, 0.12);
+  border: 1px solid rgba(245, 208, 40, 0.45);
+  color: #f0d588;
+}
+
+.btn-presets {
+  background: linear-gradient(180deg, #8a6dc0, #5b4690);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-presets .caret {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+/* Popover со списком пресетов */
+.presets-popover-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.presets-popover[hidden] { display: none !important; }
+
+.presets-popover {
+  position: absolute;
+  right: 0;
+  z-index: 100;
+  width: min(360px, 90vw);
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+}
+
+/* По умолчанию выпадает вниз */
+.presets-popover.below { top: calc(100% + 6px); }
+/* Если внизу нет места — раскрывается вверх */
+.presets-popover.above { bottom: calc(100% + 6px); }
+
+.preset-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  margin-bottom: 6px;
+}
+
+.preset-row:last-child { margin-bottom: 0; }
+
+.preset-name {
+  flex: 1;
+  min-width: 0;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preset-row .preset-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  border-radius: 6px;
+  color: #ccc;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.preset-row .preset-btn:hover {
+  background: rgba(255, 215, 0, 0.15);
+  color: #fff;
+  border-color: rgba(255, 215, 0, 0.6);
+}
+
+.preset-row .preset-btn.danger {
+  border-color: rgba(231, 76, 60, 0.5);
+  color: #e7867a;
+  padding: 4px 8px;
+}
+
+.preset-row .preset-btn.danger:hover {
+  background: rgba(231, 76, 60, 0.18);
+  color: #fff;
+  border-color: rgba(231, 76, 60, 0.8);
+}
+
+.preset-row.active {
+  border-color: rgba(255, 215, 0, 0.6);
+  background: rgba(255, 215, 0, 0.08);
+}
+
+.presets-empty {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  font-size: 0.9rem;
+  padding: 16px 8px;
+}
+
+/* Compare bar */
+.compare-bar[hidden] { display: none !important; }
+
+.compare-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  background: rgba(138, 109, 192, 0.15);
+  border: 1px solid rgba(138, 109, 192, 0.5);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.compare-bar .compare-label {
+  color: #cbb6f0;
+}
+
+.compare-bar .compare-name {
+  flex: 1;
+  color: #fff;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compare-stop {
+  background: transparent;
+  border: none;
+  color: #cbb6f0;
+  font-size: 1.3rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 6px;
+}
+
+.compare-stop:hover { color: #fff; }
+
+/* Итоги в режиме сравнения: 3 колонки (current | compared | Δ) */
+.stat-row.compare {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px 72px 72px;
+  gap: 8px;
+  font-size: 0.88rem;
+}
+
+.stat-row.compare .stat-value {
+  text-align: right;
+  min-width: 0;
+}
+
+.stat-row.compare .stat-value.compared {
+  color: #a98ddf;
+}
+
+.stat-row.compare .stat-delta {
+  min-width: 56px;
+  text-align: right;
+  font-weight: 700;
+}
+
+.stat-row.compare .stat-delta.pos { color: #58d68d; }
+.stat-row.compare .stat-delta.neg { color: #e7867a; }
+.stat-row.compare .stat-delta.zero { color: #777; }
+
+/* Заголовок столбцов в режиме сравнения — внутри каждой группы */
+.stat-row.compare.stat-header {
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.25);
+  letter-spacing: 0.02em;
+  align-items: end;
+}
+
+.stat-row.compare.stat-header .hdr {
+  text-align: right;
+  font-weight: 700;
+  color: #ffd700;
+  font-size: clamp(0.6rem, 1.6cqi, 0.8rem);
+  line-height: 1.1;
+  word-break: break-word;
+  hyphens: auto;
+  overflow: visible;
+  text-overflow: clip;
+  min-width: 0;
+}
+
+.stats-group { container-type: inline-size; }
+
+.stat-row.compare.stat-header .hdr.compared {
+  color: #cbb6f0;
+}
+
+.stat-row.compare.stat-header .hdr.delta {
+  color: #aaa;
+}
+
+/* Панель «Итоги» */
+.total-panel {
+  background: rgba(15, 20, 38, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 2px solid rgba(255, 215, 0, 0.35);
+  border-radius: 16px;
+  padding: 20px 22px;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+#total-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stats-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.group-title {
+  color: #ffd700;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed rgba(255, 215, 0, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Иконка «?» с подсказкой */
+.help-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  color: rgba(255, 215, 0, 0.85);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.help-icon:hover,
+.help-icon.active {
+  background: rgba(255, 215, 0, 0.18);
+  color: #fff;
+  border-color: rgba(255, 215, 0, 0.9);
+  transform: scale(1.08);
+}
+
+.help-tooltip[hidden] { display: none !important; }
+
+.help-tooltip {
+  position: fixed;
+  z-index: 2000;
+  max-width: 320px;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 1px solid rgba(255, 215, 0, 0.6);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #e0e0e0;
+  font-size: 0.85rem;
+  font-weight: normal;
+  line-height: 1.45;
+  text-transform: none;
+  letter-spacing: normal;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  white-space: pre-line;
+  animation: helpFade 0.15s ease-out;
+}
+
+.help-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: var(--arrow-x, 12px);
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border-left: 1px solid rgba(255, 215, 0, 0.6);
+  border-top: 1px solid rgba(255, 215, 0, 0.6);
+  transform: rotate(45deg);
+}
+
+@keyframes helpFade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 4px 5px 14px;
+  font-size: 0.92rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.stat-row:last-child {
+  border-bottom: none;
+}
+
+.stat-name {
+  color: #cfd6e0;
+}
+
+.stat-value {
+  color: #ffd700;
+  font-weight: 700;
+  font-feature-settings: 'tnum';
+}
+
+#total-stats .empty {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  padding: 20px 0;
+}
+
+.total-panel::-webkit-scrollbar { width: 6px; }
+.total-panel::-webkit-scrollbar-track { background: transparent; }
+.total-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.25);
+  border-radius: 3px;
+}
+
+/* Модалка */
+.modal[hidden] {
+  display: none !important;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: modalFadeIn 0.18s ease-out;
+}
+
+@keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  position: relative;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  border-radius: 16px;
+  width: min(960px, 100%);
+  height: 85vh;
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modalScaleIn 0.18s ease-out;
+}
+
+@keyframes modalScaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.25);
+}
+
+.modal-title {
+  color: #ffd700;
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 2rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 8px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.modal-close:hover {
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.1);
+}
+
+/* body модалки: слева список предметов, справа сайдбар (ранг, статы, кнопка) */
+.modal-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 16px;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+}
+
+.modal-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
+.sidebar-section {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-spacer {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.sidebar-temper[hidden] { display: none !important; }
+
+.sidebar-temper .sidebar-title span {
+  color: #5fb8e8;
+}
+
+.temper-range {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 6px;
+  background: linear-gradient(90deg,
+    #3a3f55 0%,
+    #5fb8e8 var(--p, 0%),
+    #3a3f55 var(--p, 0%));
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.temper-range::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #5fb8e8;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(95, 184, 232, 0.6);
+}
+
+.temper-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #5fb8e8;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(95, 184, 232, 0.6);
+}
+
+.temper-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 2px;
+}
+
+/* Секция наборов: растягивается на оставшуюся высоту, чипы внутри скроллятся */
+.sidebar-sets {
+  flex: 1 1 0;
+  min-height: 140px;
+  overflow: hidden;
+}
+
+/* Чипы наборов: банер на всю ширину, без рамок */
+.set-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  padding-right: 4px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.set-chips::-webkit-scrollbar { width: 4px; }
+.set-chips::-webkit-scrollbar-track { background: transparent; }
+.set-chips::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.25);
+  border-radius: 2px;
+}
+
+.set-chip {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  line-height: 0;
+  filter: brightness(0.7) saturate(0.7);
+  transition: filter 0.15s, transform 0.15s;
+}
+
+.set-chip:hover {
+  filter: brightness(1) saturate(1);
+  transform: translateX(2px);
+}
+
+.set-chip.active {
+  filter: brightness(1.1) saturate(1.1) drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
+}
+
+.set-chip-icon {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Текстовые чипы (без иконки) и иконные чипы (маленькая icon + текст) */
+.set-chip-text {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 8px;
+  color: #ddd;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  line-height: 1.2;
+  min-height: 36px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.set-chip-text.center {
+  justify-content: center;
+}
+
+.set-chip-text:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 215, 0, 0.45);
+  color: #fff;
+}
+
+.set-chip-text.active {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.7);
+  color: #fff;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.25);
+}
+
+.set-chip-text-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.set-chip-text-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Бейдж набора на карточке предмета */
+.item-card-set {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px 1px 4px;
+  background: rgba(255, 215, 0, 0.12);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 10px;
+  font-size: 0.68rem;
+  color: #ffd700;
+  font-weight: 600;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+/* Карточка предмета с фиксированным грейдом — фон всегда своего цвета, не зависит от модального ранга */
+.item-card[data-fixed-grade="Common"]    .item-card-icon { background-image: url('icons/Common_Equipment.webp'); }
+.item-card[data-fixed-grade="Uncommon"]  .item-card-icon { background-image: url('icons/Uncommon_Equipment.webp'); }
+.item-card[data-fixed-grade="Rare"]      .item-card-icon { background-image: url('icons/Rare_Equipment.webp'); }
+.item-card[data-fixed-grade="Epic"]      .item-card-icon { background-image: url('icons/Epic_Equipment.webp'); }
+.item-card[data-fixed-grade="Legendary"] .item-card-icon { background-image: url('icons/Legendary_Equipment.webp'); }
+.item-card[data-fixed-grade="Mythic"]    .item-card-icon { background-image: url('icons/Mythic_Equipment.webp'); }
+
+/* Астралитовый бейдж не показываем на fixed-grade карточках */
+.item-card[data-fixed-grade] .item-card-icon::before,
+.item-card[data-fixed-grade] .item-card-icon::after { display: none; }
+
+/* Бейдж «фиксированный грейд» — предмет нельзя улучшать */
+.item-card-fixed {
+  display: inline-block;
+  padding: 1px 8px;
+  margin-top: 2px;
+  margin-left: 4px;
+  background: linear-gradient(135deg, rgba(245, 208, 40, 0.25), rgba(184, 134, 11, 0.25));
+  border: 1px solid rgba(245, 208, 40, 0.6);
+  border-radius: 10px;
+  font-size: 0.68rem;
+  color: #f5d028;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+
+.item-card-set-icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+.sidebar-title {
+  color: #ffd700;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.btn-confirm {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(180deg, #d4a017, #a37c0a);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.btn-confirm:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(255, 215, 0, 0.35);
+}
+
+.btn-confirm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: linear-gradient(180deg, #555, #333);
+  border-color: #444;
+}
+
+.sidebar-section {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sidebar-title {
+  color: #ffd700;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.grade-chips {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.grade-chip {
+  --c: #888;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, var(--c), color-mix(in srgb, var(--c) 60%, #000));
+  border: 1.5px solid color-mix(in srgb, var(--c) 60%, #fff);
+  border-radius: 3px;
+  transform: rotate(45deg);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
+  filter: saturate(0.7) brightness(0.85);
+}
+
+.grade-chip:hover {
+  transform: rotate(45deg) scale(1.15);
+  filter: saturate(1) brightness(1);
+}
+
+.grade-chip.active {
+  transform: rotate(45deg) scale(1.25);
+  filter: saturate(1.1) brightness(1.1);
+  box-shadow:
+    0 0 0 1.5px #fff,
+    0 0 10px var(--c),
+    inset 0 0 4px rgba(255, 255, 255, 0.4);
+}
+
+.grade-chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.grade-chip[data-grade="Common"]    { --c: #c8d0d8; }
+.grade-chip[data-grade="Uncommon"]  { --c: #3fbf3f; }
+.grade-chip[data-grade="Rare"]      { --c: #3a7ed0; }
+.grade-chip[data-grade="Epic"]      { --c: #b042c8; }
+.grade-chip[data-grade="Legendary"] { --c: #f5d028; }
+.grade-chip[data-grade="Mythic"]    { --c: #e87838; }
+
+.modal-items-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 10px;
+}
+
+.modal-search {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+}
+
+.modal-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 9px 14px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: 8px;
+  color: #e0e0e0;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.modal-search-input::placeholder {
+  color: #777;
+}
+
+.modal-search-input:focus {
+  border-color: rgba(255, 215, 0, 0.6);
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.modal-sort-select {
+  flex: 0 0 auto;
+  max-width: 200px;
+  padding: 9px 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: 8px;
+  color: #e0e0e0;
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.modal-sort-select:focus,
+.modal-sort-select:hover {
+  border-color: rgba(255, 215, 0, 0.6);
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.modal-sort-select optgroup {
+  background: #1a1a2e;
+  color: #ffd700;
+}
+
+.modal-sort-select option {
+  background: #1a1a2e;
+  color: #e0e0e0;
+}
+
+.modal-items {
+  --grade-color: #c8d0d8;
+  --grade-bg: url('icons/Common_Equipment.webp');
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.modal-items[data-grade="Common"]    { --grade-color: #c8d0d8; --grade-bg: url('icons/Common_Equipment.webp'); }
+.modal-items[data-grade="Uncommon"]  { --grade-color: #3fbf3f; --grade-bg: url('icons/Uncommon_Equipment.webp'); }
+.modal-items[data-grade="Rare"]      { --grade-color: #3a7ed0; --grade-bg: url('icons/Rare_Equipment.webp'); }
+.modal-items[data-grade="Epic"]      { --grade-color: #b042c8; --grade-bg: url('icons/Epic_Equipment.webp'); }
+.modal-items[data-grade="Legendary"] { --grade-color: #f5d028; --grade-bg: url('icons/Legendary_Equipment.webp'); }
+.modal-items[data-grade="Mythic"]    { --grade-color: #e87838; --grade-bg: url('icons/Mythic_Equipment.webp'); }
+/* Tempered больше не подменяет фон — ставится ромб астралита поверх Mythic */
+
+.modal-items::-webkit-scrollbar { width: 6px; }
+.modal-items::-webkit-scrollbar-track { background: transparent; }
+.modal-items::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.25);
+  border-radius: 3px;
+}
+
+.item-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 215, 0, 0.2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 14px;
+  align-items: center;
+  transition: transform 0.15s, border-color 0.2s, background 0.2s;
+  text-align: left;
+}
+
+.item-card:hover {
+  transform: translateX(2px);
+  border-color: rgba(255, 215, 0, 0.7);
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.item-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.item-card.selected {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.15);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+}
+
+.item-card.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
+.item-card.disabled:hover {
+  transform: none;
+  border-color: rgba(255, 215, 0, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.item-card.empty {
+  border-style: dashed;
+  opacity: 0.8;
+}
+
+.item-card-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  background-image: var(--grade-bg);
+  background-size: cover;
+  background-position: center;
+  border: 2px solid color-mix(in srgb, var(--grade-color) 60%, #6b5b2e);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38px;
+  transition: background-image 0.2s, border-color 0.2s;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.item-card-img {
+  width: 94%;
+  height: 94%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Иконка астралита на карточке предмета в модалке (Mythic + T>0) */
+.modal-items.tempered .item-card-icon {
+  position: relative;
+}
+.modal-items.tempered .item-card-icon::before,
+.modal-items.tempered .item-card-icon::after {
+  position: absolute;
+  bottom: 3px;
+  left: 3px;
+  width: 32px;
+  height: 32px;
+  pointer-events: none;
+  z-index: 2;
+}
+.modal-items.tempered .item-card-icon::before {
+  content: '';
+  background: url('icons/astralite.webp') center/contain no-repeat;
+  filter: var(--temper-filter, none) drop-shadow(0 0 3px var(--temper-glow, rgba(95, 184, 232, 0.7)));
+}
+.modal-items.tempered .item-card-icon::after {
+  content: attr(data-temper-tier);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  -webkit-text-stroke: 2px #000;
+  paint-order: stroke fill;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.modal-items.tempered[data-temper-band="high"] {
+  --temper-filter: hue-rotate(75deg) saturate(1.2);
+  --temper-glow: rgba(184, 95, 232, 0.85);
+}
+
+.item-card.empty .item-card-icon {
+  background: transparent;
+  border-style: dashed;
+  border-color: #555;
+  color: #666;
+  box-shadow: none;
+}
+
+.item-card-name {
+  font-size: 0.95rem;
+  color: #f0f0f0;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.item-card-stats {
+  font-size: 0.82rem;
+  color: #a0d8ef;
+  line-height: 1.4;
+}
+
+/* Адаптив */
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .total-panel {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .modal-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .modal-sidebar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .sidebar-rank {
+    flex: 1 1 100%;
+  }
+  .sidebar-spacer { display: none; }
+  .btn-confirm {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 540px) {
+  .equipment-board {
+    grid-template-columns: repeat(4, 72px);
+    gap: 14px 14px;
+  }
+  .slot {
+    width: 72px;
+    height: 72px;
+    border-width: 2px;
+  }
+  .slot-img { width: 72%; height: 72%; }
+  .slot-add {
+    width: 20px; height: 20px; font-size: 14px;
+    top: -5px; right: -5px;
+  }
+  h1 { font-size: 1.4rem; }
+
+  .grade-chips {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+}

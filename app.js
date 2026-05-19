@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const temperRange = document.getElementById('temper-tier');
   const temperDisplay = document.getElementById('temper-display');
   const setChipsEl = document.getElementById('set-chips');
+  const setSelectMobileEl = document.getElementById('item-set-mobile');
   const langSwitch = document.getElementById('lang-switch');
   const saveBtn = document.getElementById('save-btn');
   const exportBtn = document.getElementById('export-btn');
@@ -306,6 +307,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return `<button type="button" class="set-chip-text center ${active}" data-set="${s.id}">${label}</button>`;
     }).join('');
+
+    // Параллельно держим в актуальном состоянии мобильный <select>
+    if (setSelectMobileEl) {
+      setSelectMobileEl.innerHTML = filters.map(s => {
+        const label = (s.id === 'all' || s.id === SETS.NONE) ? s.name : setLabel(s.id, s.name);
+        return `<option value="${s.id}">${label}</option>`;
+      }).join('');
+      setSelectMobileEl.value = currentSetFilter;
+    }
   }
   setChipsEl.addEventListener('click', e => {
     const chip = e.target.closest('.set-chip, .set-chip-text');
@@ -314,6 +324,13 @@ document.addEventListener('DOMContentLoaded', () => {
     buildSetChips();
     renderModalItems();
   });
+  if (setSelectMobileEl) {
+    setSelectMobileEl.addEventListener('change', e => {
+      currentSetFilter = e.target.value;
+      buildSetChips();
+      renderModalItems();
+    });
+  }
   buildSetChips();
 
   // Чипы категорий украшений

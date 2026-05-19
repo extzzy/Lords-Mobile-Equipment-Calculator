@@ -2,7 +2,7 @@
 
 Калькулятор снаряжения для Lords Mobile: подбор предметов по слотам, расчёт грейдов, улучшения астралитом и украшений, сохранение пресетов с возможностью сравнения, экспорт в JSON.
 
-**Демо:** https://extzzy.github.io/Lords-Mobile-Equipment-Calculator/ _(замените после публикации)_
+**Демо:** https://extzzy.github.io/Lords-Mobile-Equipment-Calculator/
 
 ## Возможности
 

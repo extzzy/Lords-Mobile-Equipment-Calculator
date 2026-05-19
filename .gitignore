@@ -16,6 +16,8 @@ yarn-error.log
 
 
 /Equipment*.html
+/Tempering*.html
+/Tempering*_files/
 /Equipment*_files/
 /Набор*.html
 /Набор*_files/
@@ -24,3 +26,5 @@ yarn-error.log
 /*.png
 /*.webp
 !/icons/**
+icons/.DS_Store
+icons/sets/.DS_Store

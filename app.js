@@ -92,8 +92,10 @@ document.addEventListener('DOMContentLoaded', () => {
     'armyDefense','trapDefense','wallDefense',
     'eff_infantryDefense','eff_rangedDefense','eff_cavalryDefense','eff_siegeDefense',
     'siegeAttack','siegeHp','eff_siegeAttack','eff_siegeHp',
-    'gatheringSpeed','researchSpeed','constructionSpeed','trainingSpeed','craftingSpeed',
-    'goldProduction','foodProduction','upkeepReduction'
+    'gatheringSpeed','researchSpeed','constructionSpeed','trainingSpeed',
+    'craftingSpeed','craftingCapacity','forgingSpeed',
+    'goldProduction','foodProduction','timberProduction','stoneProduction','oreProduction',
+    'upkeepReduction','playerExpBoost'
   ]);
 
   function updateJunkToggle() {
@@ -115,6 +117,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const jewelGradeChipsEl = document.getElementById('jewel-grade-chips');
   const jewelCategoryChipsEl = document.getElementById('jewel-category-chips');
   const jewelConfirmBtn = document.getElementById('jewel-confirm-btn');
+
+  // Минимальный уровень предмета для применения астралита (по правилам игры)
+  const TEMPER_MIN_LEVEL = 50;
+
+  // Можно ли темперить предмет астралитом: уровень >= 50, грейд = Mythic (явно
+  // или fixedGrade === Mythic), и нет fixedGrade ниже Mythic.
+  function canTemperItem(item) {
+    if (!item) return false;
+    if (item.fixedGrade && item.fixedGrade !== RARITY.MYTHIC) return false;
+    return (item.level || 0) >= TEMPER_MIN_LEVEL;
+  }
 
   let currentSlot = null;
   let currentGrade = RARITY_ORDER[0];
@@ -148,7 +161,12 @@ document.addEventListener('DOMContentLoaded', () => {
       'eff_infantryDefense', 'eff_rangedDefense', 'eff_cavalryDefense', 'eff_siegeDefense',
       'eff_infantryHp', 'eff_rangedHp', 'eff_cavalryHp', 'eff_siegeHp'
     ] },
-    { titleKey: 'group.resources', stats: ['gatheringSpeed', 'researchSpeed', 'constructionSpeed', 'trainingSpeed', 'craftingSpeed', 'goldProduction', 'foodProduction', 'upkeepReduction'] },
+    { titleKey: 'group.resources', stats: [
+      'gatheringSpeed', 'researchSpeed', 'constructionSpeed', 'trainingSpeed',
+      'forgingSpeed', 'craftingSpeed', 'craftingCapacity',
+      'goldProduction', 'foodProduction', 'timberProduction', 'stoneProduction', 'oreProduction',
+      'upkeepReduction', 'playerExpBoost'
+    ] },
     { titleKey: 'group.troops', stats: [
       'infantryAttack', 'infantryDefense', 'infantryHp',
       'rangedAttack', 'rangedDefense', 'rangedHp',
@@ -156,7 +174,15 @@ document.addEventListener('DOMContentLoaded', () => {
       'siegeAttack', 'siegeDefense', 'siegeHp'
     ] },
     { titleKey: 'group.army', stats: ['armyAttack', 'armyDefense', 'armyHp', 'trapAttack', 'trapDefense', 'wallDefense'] },
-    { titleKey: 'group.misc', stats: ['monsterHunt', 'monsterHuntTravelSpeed', 'monsterHuntDmg', 'travelSpeed', 'maxEnergy', 'mergingSpeed', 'mergingSpeedSkillstone', 'familiarTrainingExp', 'familiarSkillExp'] }
+    { titleKey: 'group.misc', stats: [
+      'monsterHunt', 'monsterHuntTravelSpeed', 'monsterHuntDmg',
+      'travelSpeed', 'maxEnergy', 'energySaver',
+      'mergingSpeed', 'mergingSpeedSkillstone',
+      'familiarTrainingExp', 'familiarSkillExp',
+      'wonderInfantryAttack', 'wonderRangedAttack', 'wonderCavalryAttack',
+      'wonderInfantryDefense', 'wonderRangedDefense', 'wonderCavalryDefense',
+      'wonderTravelSpeed'
+    ] }
   ];
 
   // Пары: эффективный_ключ → (троп-стат, army-стат). Эффект = troop + army.
@@ -246,6 +272,22 @@ document.addEventListener('DOMContentLoaded', () => {
     jewelGradeChipsEl.appendChild(chip);
   });
 
+  function pendingItemObject() {
+    if (!currentSlot || pendingIndex === null || pendingIndex === '') return null;
+    const slotKey = currentSlot.dataset.slot;
+    return (ITEMS[slotKey] || [])[pendingIndex] || null;
+  }
+
+  function updateTemperSectionVisibility() {
+    // Темпер доступен только если: грейд Mythic, и (предмет не выбран ИЛИ
+    // выбранный предмет проходит canTemperItem). До выбора предмета — показываем,
+    // чтобы пользователь видел слайдер; при клике на «низкоуровневый» предмет — скроем.
+    const item = pendingItemObject();
+    const allow = currentGrade === RARITY.MYTHIC && (!item || canTemperItem(item));
+    temperSection.hidden = !allow;
+    if (!allow) setTier(0);
+  }
+
   function setGrade(grade) {
     currentGrade = grade;
     gradeChipsEl.querySelectorAll('.grade-chip').forEach(c => {
@@ -254,12 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
       c.setAttribute('aria-checked', isActive ? 'true' : 'false');
     });
     modalItemsEl.dataset.grade = grade;
-    if (grade === RARITY.MYTHIC) {
-      temperSection.hidden = false;
-    } else {
-      temperSection.hidden = true;
-      setTier(0);
-    }
+    updateTemperSectionVisibility();
     updateTemperState();
     if (currentSlot) renderModalItems();
   }
@@ -375,6 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
       pendingIndex = card.dataset.index;
       highlightSelectedCard();
       updateConfirmBtn();
+      updateTemperSectionVisibility();
     }
   });
 
@@ -395,7 +433,8 @@ document.addEventListener('DOMContentLoaded', () => {
         delete currentSlot.dataset.temperTier;
       } else {
         currentSlot.dataset.rarity = currentGrade;
-        if (currentGrade === RARITY.MYTHIC && currentTier > 0) {
+        // Астралит сохраняется только если предмет ему соответствует (Mythic, Lv 50+)
+        if (currentGrade === RARITY.MYTHIC && currentTier > 0 && canTemperItem(pickedItem)) {
           currentSlot.dataset.temperTier = currentTier;
         } else {
           delete currentSlot.dataset.temperTier;
@@ -468,6 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentRarity === RARITY.MYTHIC) setTier(slotTier);
     renderModalItems();
     updateConfirmBtn();
+    updateTemperSectionVisibility();
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
   }
@@ -593,18 +633,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const setBadge = setMeta && setMeta.id !== SETS.NONE
         ? `<span class="item-card-set">${setMeta.icon ? `<img class="item-card-set-icon" src="${setMeta.icon}" alt="">` : ''}${setLabel(setMeta.id, setMeta.name)}</span>`
         : '';
-      // Астралит не применяется к предметам с фиксированным грейдом
-      const isTempered = !item.fixedGrade && currentGrade === RARITY.MYTHIC && currentTier > 0;
+      // Астралит: только Mythic-предметы с уровнем 50+ и не fixedGrade-нон-Mythic
+      const temperEligible = canTemperItem(item);
+      const isTempered = temperEligible && currentGrade === RARITY.MYTHIC && currentTier > 0;
       const tierAttr = isTempered ? `data-temper-tier="${currentTier}"` : '';
       const fixedAttr = item.fixedGrade ? `data-fixed-grade="${item.fixedGrade}"` : '';
       const fixedBadge = item.fixedGrade
         ? `<span class="item-card-fixed">${item.fixedGrade}</span>`
         : '';
-      html += `<div class="item-card" data-index="${index}" ${fixedAttr}>
+      const levelBadge = item.level
+        ? `<span class="item-card-level">Lv ${item.level}</span>`
+        : '';
+      html += `<div class="item-card" data-index="${index}" ${fixedAttr} data-level="${item.level || 0}">
         <div class="item-card-icon" ${tierAttr}><img class="item-card-img" src="${iconSrc}" alt=""></div>
         <div class="item-card-body">
           <div class="item-card-name">${itemLabel(item.name)}</div>
-          ${setBadge}${fixedBadge}
+          ${setBadge}${fixedBadge}${levelBadge}
           <div class="item-card-stats">${statsText}</div>
         </div>
       </div>`;
@@ -876,11 +920,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnRect = presetsBtn.getBoundingClientRect();
     const spaceBelow = window.innerHeight - btnRect.bottom - margin;
     const spaceAbove = btnRect.top - margin;
+
+    // На мобиле поповер фиксирован по вьюпорту через CSS — JS только сбрасывает inline-стили
+    const isMobile = window.matchMedia('(max-width: 600px)').matches;
+    if (isMobile) {
+      presetsPopover.classList.remove('above');
+      presetsPopover.classList.add('below');
+      presetsPopover.style.top = '';
+      presetsPopover.style.bottom = '';
+      presetsPopover.style.maxHeight = '';
+      return;
+    }
+
     const openUp = spaceBelow < 200 && spaceAbove > spaceBelow;
     presetsPopover.classList.toggle('above', openUp);
     presetsPopover.classList.toggle('below', !openUp);
-    // Ограничим высоту доступным местом, чтобы попап не уходил за край и скроллился внутри
     presetsPopover.style.maxHeight = Math.max(160, (openUp ? spaceAbove : spaceBelow) - 12) + 'px';
+    presetsPopover.style.top = '';
+    presetsPopover.style.bottom = '';
   }
 
   window.addEventListener('resize', () => { if (!presetsPopover.hidden) positionPresetsPopover(); });

@@ -133,6 +133,8 @@ h1 {
   border: 1px solid rgba(255, 215, 0, 0.25);
   border-radius: 16px;
   padding: 32px 24px;
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -728,6 +730,7 @@ h1 {
   padding: 20px 22px;
   position: sticky;
   top: 20px;
+  z-index: 1;
   max-height: calc(100vh - 40px);
   overflow-y: auto;
 }
@@ -1149,6 +1152,30 @@ h1 {
 /* Астралитовый бейдж не показываем на fixed-grade карточках */
 .item-card[data-fixed-grade] .item-card-icon::before,
 .item-card[data-fixed-grade] .item-card-icon::after { display: none; }
+
+/* Бейдж уровня предмета. Уровень < 50 — астралит недоступен (приглушённый цвет) */
+.item-card-level {
+  display: inline-block;
+  padding: 1px 8px;
+  margin-top: 2px;
+  margin-left: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  font-size: 0.68rem;
+  color: #b0b8c0;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  align-self: flex-start;
+}
+.item-card[data-level]:not([data-level="0"]) .item-card-level { color: #b0b8c0; }
+.item-card[data-level="50"] .item-card-level,
+.item-card[data-level="55"] .item-card-level,
+.item-card[data-level="60"] .item-card-level {
+  color: #5fb8e8;
+  border-color: rgba(95, 184, 232, 0.45);
+  background: rgba(95, 184, 232, 0.1);
+}
 
 /* Бейдж «фиксированный грейд» — предмет нельзя улучшать */
 .item-card-fixed {
@@ -1630,29 +1657,33 @@ h1 {
   .lang-switch { margin: 0 auto; }
 
   .equipment-panel { padding: 16px 8px; }
+  .board-card { width: 100%; align-items: center; }
 
-  /* Сжимаем слот и связанную обёртку — отказываемся от ромба, делаем чистую 2-колонную сетку */
+  /* Ромбовидная раскладка сохраняется, но в уменьшенном масштабе.
+     Узкие ряды (рука/рука, ноги/акс) — в центральных колонках 2/3.
+     Широкие ряды (шлем/акс, броня/акс) — на крайних колонках 1/4. */
   .equipment-board {
-    grid-template-columns: repeat(2, 78px);
-    gap: 10px 14px;
+    grid-template-columns: repeat(4, 68px);
+    gap: 8px 10px;
+    justify-content: center;
   }
-  .slot-wrap {
-    width: 78px;
-    height: 78px;
+  .equipment-board .slot-wrap {
+    width: 68px;
+    height: 68px;
   }
-  .slot-wrap.row-narrow.col-left,
-  .slot-wrap.row-wide.col-left  { grid-column: 1; transform: none; }
-  .slot-wrap.row-narrow.col-right,
-  .slot-wrap.row-wide.col-right { grid-column: 2; transform: none; }
+  .equipment-board .slot-wrap.row-narrow.col-left  { grid-column: 2; transform: none; }
+  .equipment-board .slot-wrap.row-narrow.col-right { grid-column: 3; transform: none; }
+  .equipment-board .slot-wrap.row-wide.col-left    { grid-column: 1; transform: none; }
+  .equipment-board .slot-wrap.row-wide.col-right   { grid-column: 4; transform: none; }
 
   .slot {
-    width: 78px;
-    height: 78px;
+    width: 68px;
+    height: 68px;
     border-width: 2px;
     border-radius: 10px;
   }
   .slot-img { width: 72%; height: 72%; }
-  .slot.filled .slot-img { width: 84%; height: 84%; transform: translateY(-6px); }
+  .slot.filled .slot-img { width: 84%; height: 84%; transform: translateY(-5px); }
   .slot-add {
     width: 20px; height: 20px; font-size: 14px;
     top: -5px; right: -5px;
@@ -1673,7 +1704,20 @@ h1 {
   .equipment-actions .btn { padding: 8px 14px; font-size: 0.85rem; flex: 1 1 auto; }
   .presets-popover-wrap { flex: 1 1 auto; }
   .btn-presets { width: 100%; justify-content: center; }
-  .presets-popover { width: 92vw; right: auto; left: 50%; transform: translateX(-50%); }
+  /* Поповер прибиваем к вьюпорту, не к кнопке — открывается вверх от низа экрана */
+  .presets-popover {
+    position: fixed;
+    left: 4vw;
+    right: 4vw;
+    width: auto;
+    transform: none;
+    max-height: 60vh;
+  }
+  .presets-popover.below,
+  .presets-popover.above {
+    top: auto !important;
+    bottom: 12px !important;
+  }
 
   /* Compare-доска на мобиле — под текущей, не справа */
   .boards-area { flex-direction: column; gap: 18px; }
@@ -1689,14 +1733,20 @@ h1 {
     gap: 12px;
   }
 
-  /* Таблица сравнения — три цифровые колонки могут не влезть на узком экране */
+  /* Таблица сравнения — три цифровые колонки + лейбл; шрифт уменьшаем чтобы числа не наезжали */
   .stat-row.compare {
-    grid-template-columns: minmax(0, 1fr) 54px 54px 54px;
-    gap: 6px;
+    grid-template-columns: minmax(0, 1fr) 60px 60px 60px;
+    gap: 4px;
   }
   .stat-row.compare .stat-value,
-  .stat-row.compare.stat-header .hdr { font-size: 0.85rem; }
-  .stat-label { font-size: 0.85rem; min-width: 0; }
+  .stat-row.compare .stat-delta,
+  .stat-row.compare.stat-header .hdr {
+    font-size: 0.72rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .stat-label { font-size: 0.78rem; min-width: 0; }
 
   /* Карточки предметов в модалке — компактнее под мобильный экран */
   .item-card {
@@ -1710,4 +1760,27 @@ h1 {
 
   /* Help-tooltip / подсказки */
   .help-tooltip { max-width: 84vw; font-size: 0.8rem; }
+}
+
+/* Очень узкие экраны (Galaxy S8 и подобные, 360px) — ромб ещё уменьшаем */
+@media (max-width: 400px) {
+  body { padding: 8px; }
+  .equipment-panel { padding: 12px 4px; }
+  .equipment-board {
+    grid-template-columns: repeat(4, 60px);
+    gap: 6px 8px;
+    justify-content: center;
+  }
+  .equipment-board .slot-wrap { width: 60px; height: 60px; }
+  .equipment-board .slot-wrap.row-narrow.col-left,
+  .equipment-board .slot-wrap.row-narrow.col-right,
+  .equipment-board .slot-wrap.row-wide.col-left,
+  .equipment-board .slot-wrap.row-wide.col-right { transform: none; }
+  .slot { width: 60px; height: 60px; }
+  .slot.filled.tempered::before,
+  .slot.filled.tempered::after {
+    width: 20px; height: 20px; top: 22px;
+  }
+  .jewel-slot { width: 14px; height: 14px; font-size: 8px; }
+  h1 { font-size: 1rem; }
 }

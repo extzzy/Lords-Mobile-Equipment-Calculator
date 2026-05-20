@@ -129,6 +129,16 @@ document.addEventListener('DOMContentLoaded', () => {
     return (item.level || 0) >= TEMPER_MIN_LEVEL;
   }
 
+  // Максимальный тир астралита для конкретного предмета (наследуется от сета).
+  // Без override = глобальный TEMPER_MAX_TIER (15).
+  function getItemMaxTier(item) {
+    if (!item) return TEMPER_MAX_TIER;
+    if (typeof item.maxTemperTier === 'number') return item.maxTemperTier;
+    const setMeta = SET_LIST.find(s => s.id === item.set);
+    if (setMeta && typeof setMeta.maxTemperTier === 'number') return setMeta.maxTemperTier;
+    return TEMPER_MAX_TIER;
+  }
+
   let currentSlot = null;
   let currentGrade = RARITY_ORDER[0];
   let currentTier = 0;
@@ -155,6 +165,19 @@ document.addEventListener('DOMContentLoaded', () => {
     return base;
   }
 
+  // Итоговый множитель статов предмета с учётом fixedGrade и астралита.
+  // Для fixedGrade значения в data.js — уже финальные базовые, поэтому без grade-множителя;
+  // астралит (T1+) накладывается отдельно.
+  function getItemMultiplier(item, grade, tier) {
+    if (item && item.fixedGrade) {
+      if (item.fixedGrade === RARITY.MYTHIC && tier > 0) {
+        return 1 + TEMPER_BONUS[tier] / 70;
+      }
+      return 1;
+    }
+    return getMultiplier(grade, tier);
+  }
+
   const STAT_GROUPS = [
     { titleKey: 'group.effective', helpKey: 'help.effective', stats: [
       'eff_infantryAttack', 'eff_rangedAttack', 'eff_cavalryAttack', 'eff_siegeAttack',
@@ -173,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'cavalryAttack', 'cavalryDefense', 'cavalryHp',
       'siegeAttack', 'siegeDefense', 'siegeHp'
     ] },
-    { titleKey: 'group.army', stats: ['armyAttack', 'armyDefense', 'armyHp', 'trapAttack', 'trapDefense', 'wallDefense'] },
+    { titleKey: 'group.army', stats: ['armyAttack', 'armyDefense', 'armyHp', 'armyCapacity', 'trapAttack', 'trapDefense', 'wallDefense'] },
     { titleKey: 'group.misc', stats: [
       'monsterHunt', 'monsterHuntTravelSpeed', 'monsterHuntDmg',
       'travelSpeed', 'maxEnergy', 'energySaver',
@@ -285,7 +308,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const item = pendingItemObject();
     const allow = currentGrade === RARITY.MYTHIC && (!item || canTemperItem(item));
     temperSection.hidden = !allow;
-    if (!allow) setTier(0);
+    if (!allow) {
+      setTier(0);
+    } else {
+      // Пересинхронизируем max слайдера под выбранный предмет (Emperor → T5 и т.п.)
+      setTier(currentTier);
+    }
   }
 
   function setGrade(grade) {
@@ -302,10 +330,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function setTier(tier) {
-    currentTier = Math.max(0, Math.min(TEMPER_MAX_TIER, Number(tier) || 0));
+    const item = pendingItemObject();
+    const maxTier = getItemMaxTier(item);
+    currentTier = Math.max(0, Math.min(maxTier, Number(tier) || 0));
+    temperRange.max = maxTier;
     temperRange.value = currentTier;
     temperDisplay.textContent = `T${currentTier}`;
-    temperRange.style.setProperty('--p', (currentTier / TEMPER_MAX_TIER) * 100 + '%');
+    temperRange.style.setProperty('--p', (currentTier / maxTier) * 100 + '%');
+    // Подпись справа от ползунка — динамическая
+    const scale = temperSection.querySelector('.temper-scale span:last-child');
+    if (scale) scale.textContent = `T${maxTier}`;
     updateTemperState();
     if (currentSlot) renderModalItems();
   }
@@ -427,18 +461,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const slotKey = currentSlot.dataset.slot;
       const pickedItem = (ITEMS[slotKey] || [])[pendingIndex];
       currentSlot.dataset.itemIndex = pendingIndex;
-      // Если у предмета фиксированный грейд — используем его, иначе выбранный
+      // Если у предмета фиксированный грейд — используем его, иначе выбранный.
+      // Астралит может применяться к Mythic-предметам (включая fixedGrade='Mythic'),
+      // если уровень >= 50 (canTemperItem). Тир клипается до maxTemperTier предмета/сета.
       if (pickedItem && pickedItem.fixedGrade) {
         currentSlot.dataset.rarity = pickedItem.fixedGrade;
-        delete currentSlot.dataset.temperTier;
       } else {
         currentSlot.dataset.rarity = currentGrade;
-        // Астралит сохраняется только если предмет ему соответствует (Mythic, Lv 50+)
-        if (currentGrade === RARITY.MYTHIC && currentTier > 0 && canTemperItem(pickedItem)) {
-          currentSlot.dataset.temperTier = currentTier;
-        } else {
-          delete currentSlot.dataset.temperTier;
-        }
+      }
+      const effectiveGrade = currentSlot.dataset.rarity;
+      if (effectiveGrade === RARITY.MYTHIC && currentTier > 0 && canTemperItem(pickedItem)) {
+        const maxT = getItemMaxTier(pickedItem);
+        currentSlot.dataset.temperTier = Math.min(currentTier, maxT);
+      } else {
+        delete currentSlot.dataset.temperTier;
       }
     }
     renderSlot(currentSlot);
@@ -621,8 +657,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const en = item.name.toLowerCase();
         if (!ru.includes(q) && !en.includes(q)) return;
       }
-      // У предметов с фиксированным грейдом множитель = 1 (значения уже финальные)
-      const mult = item.fixedGrade ? 1 : multiplier;
+      // Итоговый множитель: fixedGrade-Legendary → 1; fixedGrade-Mythic+T → астралит-бонус; иначе grade × астралит.
+      const mult = getItemMultiplier(item, currentGrade, canTemperItem(item) ? currentTier : 0);
       const statsText = Object.entries(item.stats).map(([s, v]) => {
         const final = Math.round(v * mult * 10) / 10;
         const unit = s === 'maxEnergy' ? '' : '%';
@@ -685,10 +721,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     JEWELS.forEach(j => {
       if (currentJewelCategory !== 'all' && j.category !== currentJewelCategory) return;
-      const value = j.values[gradeIdx];
-      const unit = j.stat === 'maxEnergy' ? '' : '%';
       const isUsed = usedIdsElsewhere.includes(j.id);
-      const statsText = `${statLabel(j.stat)}: +${value}${unit}`;
+      const statsText = Object.entries(j.stats).map(([k, arr]) => {
+        const val = arr[gradeIdx];
+        const unit = k === 'maxEnergy' ? '' : '%';
+        return `${statLabel(k)}: +${val}${unit}`;
+      }).join('<br>');
       html += `<div class="item-card ${isUsed ? 'disabled' : ''}" data-jewel-id="${j.id}" ${isUsed ? `title="${t('jewels.alreadyUsed')}"` : ''}>
         <div class="item-card-icon"${j.icon ? '' : ''}><img class="item-card-img" src="${j.icon || ''}" alt=""></div>
         <div class="item-card-body">
@@ -1032,8 +1070,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!item) { equipment[slotKey] = null; return; }
       hasAny = true;
       const rarity = item.fixedGrade || s.rarity || RARITY_ORDER[0];
-      const tier = item.fixedGrade ? 0 : (s.temperTier || 0);
-      const multiplier = item.fixedGrade ? 1 : getMultiplier(rarity, tier);
+      const tier = s.temperTier || 0;
+      const multiplier = getItemMultiplier(item, rarity, tier);
       const setMeta = SET_LIST.find(x => x.id === item.set);
 
       const itemStats = {};
@@ -1045,12 +1083,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const meta = JEWELS.find(x => x.id === j.id);
         if (!meta) return null;
         const gi = JEWEL_GRADE_ORDER.indexOf(j.grade);
-        const value = gi >= 0 ? meta.values[gi] : 0;
-        return {
-          name: meta.name,
-          grade: j.grade,
-          bonus: `${statLabel(meta.stat)} +${value}${meta.stat === 'maxEnergy' ? '' : '%'}`
-        };
+        if (gi < 0) return null;
+        const bonus = Object.entries(meta.stats).map(([k, arr]) => {
+          const val = arr[gi];
+          return `${statLabel(k)} +${val}${k === 'maxEnergy' ? '' : '%'}`;
+        }).join(', ');
+        return { name: meta.name, grade: j.grade, bonus };
       }).filter(Boolean);
 
       equipment[slotKey] = {
@@ -1308,8 +1346,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!s) return;
       const item = (ITEMS[slotKey] || [])[s.itemIndex];
       if (!item) return;
-      // Предметы с фиксированным грейдом не умножаются — значения уже финальные
-      const multiplier = item.fixedGrade ? 1 : getMultiplier(s.rarity || RARITY_ORDER[0], s.temperTier || 0);
+      // fixedGrade-Legendary → 1; fixedGrade-Mythic+T → астралит-бонус; иначе grade × астралит
+      const multiplier = getItemMultiplier(item, s.rarity || RARITY_ORDER[0], s.temperTier || 0);
       for (const [stat, value] of Object.entries(item.stats)) {
         totals[stat] = (totals[stat] || 0) + value * multiplier;
       }
@@ -1319,7 +1357,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!meta) return;
         const gi = JEWEL_GRADE_ORDER.indexOf(j.grade);
         if (gi < 0) return;
-        totals[meta.stat] = (totals[meta.stat] || 0) + meta.values[gi];
+        Object.entries(meta.stats).forEach(([k, arr]) => {
+          totals[k] = (totals[k] || 0) + arr[gi];
+        });
       });
     });
     // Производные показатели: войско + соответствующий армейский бонус

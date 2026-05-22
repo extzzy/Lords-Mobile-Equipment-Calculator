@@ -1019,11 +1019,17 @@ h1 {
   margin-top: 2px;
 }
 
-/* Секция наборов: растягивается на оставшуюся высоту, чипы внутри скроллятся */
+/* Секция наборов: растягивается на оставшуюся высоту, чипы внутри скроллятся.
+   Минимальный горизонтальный padding — баннеры на всю ширину секции. */
 .sidebar-sets {
   flex: 1 1 0;
   min-height: 140px;
   overflow: hidden;
+  padding: 12px 4px;
+}
+
+.sidebar-sets .sidebar-title {
+  padding: 0 6px;
 }
 
 /* Чипы наборов: банер на всю ширину, без рамок */
@@ -1032,7 +1038,7 @@ h1 {
   flex-direction: column;
   gap: 4px;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 2px;
   flex: 1 1 auto;
   min-height: 0;
 }
@@ -1044,16 +1050,27 @@ h1 {
   border-radius: 2px;
 }
 
+/* Единая высота для всех типов чипов набора (баннер / иконный / текстовый).
+   Баннер рендерится как background-image на самом <button>. */
+:root { --set-chip-height: 56px; }
+
 .set-chip {
   display: block;
-  width: 100%;
+  width: 252px;
+  height: var(--set-chip-height);
+  min-height: var(--set-chip-height);
   padding: 0;
-  background: none;
-  border: none;
+  background-color: rgba(0, 0, 0, 0.3);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 8px;
   cursor: pointer;
   position: relative;
-  line-height: 0;
-  filter: brightness(0.7) saturate(0.7);
+  appearance: none;
+  -webkit-appearance: none;
+  filter: brightness(0.85) saturate(0.85);
   transition: filter 0.15s, transform 0.15s;
 }
 
@@ -1066,11 +1083,13 @@ h1 {
   filter: brightness(1.1) saturate(1.1) drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
 }
 
+/* Старая разметка с <img class="set-chip-icon"> больше не используется,
+   но оставим правило на случай старых кэшированных скриптов */
 .set-chip-icon {
   display: block;
   width: 100%;
-  height: auto;
-  object-fit: contain;
+  height: var(--set-chip-height);
+  object-fit: cover;
 }
 
 /* Текстовые чипы (без иконки) и иконные чипы (маленькая icon + текст) */
@@ -1078,18 +1097,18 @@ h1 {
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 100%;
-  padding: 6px 12px;
+  width: 252px;
+  height: var(--set-chip-height);
+  padding: 6px 14px;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 215, 0, 0.2);
   border-radius: 8px;
   color: #ddd;
-  font-size: 0.85rem;
+  font-size: 0.92rem;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
   line-height: 1.2;
-  min-height: 36px;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
@@ -1111,8 +1130,8 @@ h1 {
 }
 
 .set-chip-text-icon {
-  width: 26px;
-  height: 26px;
+  width: 38px;
+  height: 38px;
   object-fit: contain;
   flex-shrink: 0;
 }

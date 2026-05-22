@@ -367,9 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Для синтетических фильтров (all, no-set) — используем готовое имя; для реальных сетов — переводим.
       const label = (s.id === 'all' || s.id === SETS.NONE) ? s.name : setLabel(s.id, s.name);
       if (s.iconStyle === 'banner') {
-        return `<button type="button" class="set-chip ${active}" data-set="${s.id}" title="${label}">
-          <img class="set-chip-icon" src="${s.icon}" alt="${label}">
-        </button>`;
+        return `<button type="button" class="set-chip ${active}" data-set="${s.id}" title="${label}" style="background-image: url('${s.icon}')" aria-label="${label}"></button>`;
       }
       if (s.iconStyle === 'icon') {
         return `<button type="button" class="set-chip-text ${active}" data-set="${s.id}">
@@ -388,17 +386,25 @@ document.addEventListener('DOMContentLoaded', () => {
       setSelectMobileEl.value = currentSetFilter;
     }
   }
+  // Обновляем .active без пересоздания всего списка, чтобы не сбивать скролл
+  function syncSetFilterUI() {
+    setChipsEl.querySelectorAll('.set-chip, .set-chip-text').forEach(el => {
+      el.classList.toggle('active', el.dataset.set === currentSetFilter);
+    });
+    if (setSelectMobileEl) setSelectMobileEl.value = currentSetFilter;
+  }
+
   setChipsEl.addEventListener('click', e => {
     const chip = e.target.closest('.set-chip, .set-chip-text');
     if (!chip) return;
     currentSetFilter = chip.dataset.set;
-    buildSetChips();
+    syncSetFilterUI();
     renderModalItems();
   });
   if (setSelectMobileEl) {
     setSelectMobileEl.addEventListener('change', e => {
       currentSetFilter = e.target.value;
-      buildSetChips();
+      syncSetFilterUI();
       renderModalItems();
     });
   }

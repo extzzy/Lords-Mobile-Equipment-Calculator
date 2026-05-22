@@ -41,7 +41,7 @@ const SET_LIST = [
   { id: 'champion', name: 'Champion', icon: 'icons/sets/champion.webp', iconStyle: 'banner' },
   { id: 'cottageroar', name: 'Cottageroar', icon: 'icons/sets/cottageroar.webp', iconStyle: 'banner' },
   { id: 'emperor', name: 'Emperor', icon: 'icons/sets/emperor.webp', iconStyle: 'icon', maxTemperTier: 5 },
-  { id: 'exalted', name: 'Exalted', icon: null, iconStyle: null },
+  { id: 'exalted', name: 'Exalted', icon: 'icons/sets/Emperor_Dominion.webp', iconStyle: 'icon', maxTemperTier: 5 },
   { id: 'frostwing', name: 'Frostwing', icon: 'icons/sets/frostwing.webp', iconStyle: 'banner' },
   { id: 'gargantua', name: 'Gargantua', icon: 'icons/sets/gargantua.webp', iconStyle: 'banner' },
   { id: 'gawrilla', name: 'Gawrilla', icon: 'icons/sets/gawrilla.webp', iconStyle: 'banner' },
